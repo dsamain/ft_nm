@@ -1,14 +1,21 @@
 NAME			= ft_nm
 
-SRCS			= $(addprefix srcs/, main.c utils.c)
+SRCS			= $(addprefix srcs/, main.c utils.c ft_nm_64.c)
 OBJS			= $(SRCS:.c=.o)
 
 #CFLAGS			= -Wall -Wextra -Werror 
 
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 all:			$(NAME)
 
+test: all
+	./ft_nm ft_nm
+
 $(NAME):		$(OBJS)
-				gcc $(OBJS) -o $(NAME)
+				gcc -D DEBUG $(OBJS) -o $(NAME)
 
 run: all
 	./$(NAME)
