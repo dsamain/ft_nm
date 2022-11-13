@@ -1,6 +1,6 @@
 NAME			= ft_nm
 
-SRCS			= $(addprefix srcs/, main.c utils.c ft_nm_64.c)
+SRCS			= $(addprefix srcs/, main.c utils.c common.c ft_nm_64.c ft_nm_32.c)
 OBJS			= $(SRCS:.c=.o)
 
 #CFLAGS			= -Wall -Wextra -Werror 
@@ -15,7 +15,7 @@ test: all
 	./ft_nm ft_nm
 
 $(NAME):		$(OBJS)
-				gcc -D DEBUG $(OBJS) -o $(NAME)
+				gcc $(OBJS) -o $(NAME)
 
 run: all
 	./$(NAME)

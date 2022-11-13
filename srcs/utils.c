@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define throw(x) { ft_fputstr(x, 2); exit(1); }
 
@@ -39,4 +40,30 @@ void *ft_malloc(size_t size) {
     void *ptr = malloc(size);
     if (!ptr) throw("Error: malloc() failed\n");
     return ptr;
+}
+
+char *ft_join(char *s, char *t) {
+    char *ret = malloc(ft_strlen(s) + ft_strlen(t) + 1);
+    if (!ret) {
+        throw("malloc error\n");
+    }
+
+    int i = 0;
+    for (int j = 0; s && s[j]; j++, i++) 
+        ret[i] = s[j];
+    for (int j = 0; t && t[j]; j++, i++) 
+        ret[i] = t[j];
+    ret[i] = 0;
+    return ret;
+}
+
+char *cat_f(char *s, ...) {
+    va_list l;
+    va_start(l, s);
+    char *tmp = NULL;
+    do {
+        s = ft_join(s, tmp);
+    } while ((tmp = va_arg(l, char *)));
+    va_end(l);
+    return s;
 }

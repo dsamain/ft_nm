@@ -1,7 +1,7 @@
 #include "../inc/ft_nm.h"
 
-void ft_nm_64(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
-    struct elf64_hdr *header = (struct elf64_hdr *)raw_file;
+void ft_nm_32(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
+    struct elf32_hdr *header = (struct elf32_hdr *)raw_file;
 
 
     if (!header->e_shoff || !header->e_phoff) {
@@ -9,9 +9,9 @@ void ft_nm_64(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
         return;
     }
 
-    struct elf64_shdr *section_header_table = (struct elf64_shdr *)(raw_file + header->e_shoff); 
+    struct elf32_shdr *section_header_table = (struct elf32_shdr *)(raw_file + header->e_shoff); 
 
-    if ((void *)section_header_table + sizeof(struct elf64_shdr) * header->e_shnum > (void *)header + size) {
+    if ((void *)section_header_table + sizeof(struct elf32_shdr) * header->e_shnum > (void *)header + size) {
         err(cat("ft_nm: ", file_name, ": File truncated\n"));
         return;
     }
@@ -26,13 +26,13 @@ void ft_nm_64(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
         return;
     }
 
-    struct elf64_shdr shstrtab = section_header_table[shdr_str_idx]; // section header string table
+    struct elf32_shdr shstrtab = section_header_table[shdr_str_idx]; // section header string table
 
 
     // iteratate over all section header to find symtab_header and strtab_header
-    struct elf64_shdr *symtab_hdr = NULL, *strtab_hdr = NULL;
+    struct elf32_shdr *symtab_hdr = NULL, *strtab_hdr = NULL;
     for (int i = 0; i < shdr_num; i++) {
-        struct elf64_shdr *section_header = section_header_table + i;
+        struct elf32_shdr *section_header = section_header_table + i;
         char *name = raw_file + shstrtab.sh_offset + section_header->sh_name;
         // check NULL terminated name
         char *tmp = name;
@@ -58,7 +58,7 @@ void ft_nm_64(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
 
 
     // symbol table and string table associated with it
-    struct elf64_sym *symtab = (struct elf64_sym *)(raw_file + symtab_hdr->sh_offset);
+    struct elf32_sym *symtab = (struct elf32_sym *)(raw_file + symtab_hdr->sh_offset);
     char *strtab = raw_file + strtab_hdr->sh_offset;
 
     // check overflow of symtab and strtab
@@ -68,18 +68,18 @@ void ft_nm_64(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
         return;
     }
 
-    size_t sym_cnt = symtab_hdr->sh_size / sizeof(struct elf64_sym);
+    size_t sym_cnt = symtab_hdr->sh_size / sizeof(struct elf32_sym);
     t_symbol *symbols = ft_malloc(sizeof(t_symbol) * sym_cnt);
     int idx = 0;
 
     // iterate over all symbol table entry
     for (int i = 0; i < sym_cnt ; i++) {
-        struct elf64_sym sym = symtab[i];
+        struct elf32_sym sym = symtab[i];
         if (sym.st_name == 0) {
             continue;
         }
         symbols[idx].name = strtab + sym.st_name;
-        symbols[idx].type = get_sym_type_64(section_header_table, sym);
+        symbols[idx].type = get_sym_type_32(section_header_table, sym);
         symbols[idx].value = sym.st_value;
 
         if (symbols[idx].type == 'a') {
@@ -95,18 +95,17 @@ void ft_nm_64(void *raw_file, char *file_name, size_t size, u_int32_t flags) {
     if (!(flags & FLAG_UNIQUE)) {
         put(cat("\n", file_name, ":\n"));
     }
-    show_symbols(symbols, idx, flags, 16);
+    show_symbols(symbols, idx, flags, 8);
 }
 
-// https://stackoverflow.com/questions/15225346/how-to-display-the-symbols-type-like-the-nm-command
-char get_sym_type_64(struct elf64_shdr *shdr, struct elf64_sym sym) {
+char get_sym_type_32(struct elf32_shdr *shdr, struct elf32_sym sym) {
 
     char c = '?';
-    if (ELF64_ST_BIND(sym.st_info) == STB_WEAK) {
+    if (ELF32_ST_BIND(sym.st_info) == STB_WEAK) {
         c = 'W';
         if (sym.st_shndx == SHN_UNDEF)
             c = 'w';
-    } else if (ELF64_ST_BIND(sym.st_info) == STB_WEAK && ELF64_ST_TYPE(sym.st_info) == STT_OBJECT) {
+    } else if (ELF32_ST_BIND(sym.st_info) == STB_WEAK && ELF32_ST_TYPE(sym.st_info) == STT_OBJECT) {
         c = 'V';
         if (sym.st_shndx == SHN_UNDEF)
             c = 'v';
@@ -133,10 +132,10 @@ char get_sym_type_64(struct elf64_shdr *shdr, struct elf64_sym sym) {
     }
 
 
-    if (ELF64_ST_BIND(sym.st_info) == STB_LOCAL && c != '?')
+    if (ELF32_ST_BIND(sym.st_info) == STB_LOCAL && c != '?')
         c += 32;
 
-    if (ELF64_ST_BIND(sym.st_info) == STB_LOCAL && c == '?')
+    if (ELF32_ST_BIND(sym.st_info) == STB_LOCAL && c == '?')
         c = 'd';
 
     return c;
